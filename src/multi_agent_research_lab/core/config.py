@@ -17,6 +17,9 @@ class Settings(BaseSettings):
     app_env: str = Field(default="local", validation_alias="APP_ENV")
     log_level: str = Field(default="INFO", validation_alias="LOG_LEVEL")
 
+    ollama_base_url: str = Field(default="http://localhost:11434", validation_alias="OLLAMA_BASE_URL")
+    ollama_model: str = Field(default="llama3.2", validation_alias="OLLAMA_MODEL")
+
     openai_api_key: str | None = Field(default=None, validation_alias="OPENAI_API_KEY")
     openai_model: str = Field(default="gpt-4o-mini", validation_alias="OPENAI_MODEL")
 

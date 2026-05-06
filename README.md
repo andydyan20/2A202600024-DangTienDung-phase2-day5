@@ -59,7 +59,7 @@ Trace + Benchmark Report
 ```bash
 python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\\Scripts\\activate
-pip install -e "[dev]"
+pip install -e ".[dev]"
 cp .env.example .env
 ```
 
@@ -68,10 +68,23 @@ cp .env.example .env
 Mở `.env` và điền key cần thiết.
 
 ```bash
-OPENAI_API_KEY=...
+# Local LLM (default)
+OLLAMA_BASE_URL=http://localhost:11434
+OLLAMA_MODEL=llama3.2
+
 # optional
-LANGSMITH_API_KEY=...
 TAVILY_API_KEY=...
+LANGSMITH_API_KEY=...
+
+# optional (cloud LLM)
+OPENAI_API_KEY=...
+```
+
+Nếu dùng Ollama, đảm bảo bạn đã chạy:
+
+```bash
+ollama serve
+ollama pull llama3.2
 ```
 
 ### 3. Chạy smoke test

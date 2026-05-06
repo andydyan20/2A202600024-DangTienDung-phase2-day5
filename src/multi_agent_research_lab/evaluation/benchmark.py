@@ -11,13 +11,35 @@ Runner = Callable[[str], ResearchState]
 
 
 def run_benchmark(run_name: str, query: str, runner: Runner) -> tuple[ResearchState, BenchmarkMetrics]:
-    """Measure latency and return a placeholder metric object.
+    """Measure latency and return basic metrics.
 
-    TODO(student): Add quality scoring, estimated token cost, citation coverage, and error rate.
+    Quality/cost here are intentionally lightweight heuristics so the lab runs without
+    external evaluation dependencies.
     """
 
     started = perf_counter()
     state = runner(query)
     latency = perf_counter() - started
-    metrics = BenchmarkMetrics(run_name=run_name, latency_seconds=latency)
+
+    estimated_cost = 0.0
+    has_cost = False
+    for item in state.agent_results:
+        cost = item.metadata.get("cost_usd")
+        if isinstance(cost, (int, float)) and cost is not None:
+            estimated_cost += float(cost)
+            has_cost = True
+
+    text = state.final_answer or ""
+    citation_count = text.count("[")
+    length_score = min(len(text) / 800.0, 1.0) * 6.0
+    citation_score = min(citation_count / 6.0, 1.0) * 4.0
+    quality = max(0.0, min(10.0, length_score + citation_score)) if text.strip() else 0.0
+
+    metrics = BenchmarkMetrics(
+        run_name=run_name,
+        latency_seconds=latency,
+        estimated_cost_usd=estimated_cost if has_cost else None,
+        quality_score=quality,
+        notes=f"errors={len(state.errors)}",
+    )
     return state, metrics
