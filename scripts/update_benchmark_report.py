@@ -128,16 +128,32 @@ def main() -> None:
     trace_path = root / "reports" / "trace_graphrag.json"
 
     report_md = report_path.read_text(encoding="utf-8")
+
+    # Re-run multi-agent to refresh trace JSON
+    from multi_agent_research_lab.core.schemas import ResearchQuery
+    from multi_agent_research_lab.core.state import ResearchState
+    from multi_agent_research_lab.graph.workflow import MultiAgentWorkflow
+
+    existing = json.loads(trace_path.read_text(encoding="utf-8")) if trace_path.exists() else {}
+    q = (existing.get("request") or {}).get("query") or "Research GraphRAG state-of-the-art and write a 500-word summary"
+
+    t_multi = perf_counter()
+    result_state = MultiAgentWorkflow().run(ResearchState(request=ResearchQuery(query=q)))
+    multi_latency_measured = perf_counter() - t_multi
+
+    trace_path.write_text(result_state.model_dump_json(indent=2) + "\n", encoding="utf-8")
     state = json.loads(trace_path.read_text(encoding="utf-8"))
 
     # Multi-agent metrics from trace
     multi_latency = None
     for item in state.get("trace", []):
         if item.get("name") == "span" and (item.get("payload") or {}).get("name") == "workflow":
-            multi_latency = float((item.get("payload") or {}).get("duration_seconds"))
+            multi_latency = (item.get("payload") or {}).get("duration_seconds")
             break
-    if multi_latency is None:
-        raise RuntimeError("Could not find workflow span duration in reports/trace_graphrag.json")
+    if isinstance(multi_latency, (int, float)):
+        multi_latency_seconds = float(multi_latency)
+    else:
+        multi_latency_seconds = float(multi_latency_measured)
 
     multi_in = 0
     multi_out = 0
@@ -193,7 +209,7 @@ def main() -> None:
         f"Local Ollama (capped to 250 words); tokens_in={b_in}, tokens_out={b_out} |"
     )
     multi_row = (
-        f"| multi-agent | {multi_latency:.2f} | {multi_cost:.4f} | {multi_quality:.1f} | "
+        f"| multi-agent | {multi_latency_seconds:.2f} | {multi_cost:.4f} | {multi_quality:.1f} | "
         f"sources={sources_n}; tokens_in={multi_in}, tokens_out={multi_out}; {err_note} |"
     )
 
@@ -213,6 +229,7 @@ def main() -> None:
 
     report_path.write_text(updated, encoding="utf-8")
     print(f"Updated {report_path}")
+    print(f"Updated {trace_path}")
 
 
 if __name__ == "__main__":

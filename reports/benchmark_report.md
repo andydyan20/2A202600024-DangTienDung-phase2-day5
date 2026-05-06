@@ -24,8 +24,8 @@ The runs below were executed using the CLI commands in `README.md`.
 
 | Run | Latency (s) | Cost (USD) | Quality | Notes |
 |---|---:|---:|---:|---|
-| baseline | 11.28 | 0.0057 | 8.0 | Local Ollama (capped to 250 words); tokens_in=81, tokens_out=350 |
-| multi-agent | 62.38 | 0.0552 | 10.0 | sources=5; tokens_in=5017, tokens_out=2009; errors=1; first=Citation index exceeds available sources |
+| baseline | 8.28 | 0.0057 | 8.0 | Local Ollama (capped to 250 words); tokens_in=81, tokens_out=350 |
+| multi-agent | 56.04 | 0.0462 | 8.5 | sources=5; tokens_in=3476, tokens_out=1921; errors=0 |
 
 ## Observations
 
